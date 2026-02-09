@@ -40,7 +40,7 @@ class Order(models.Model):
         default=StatusChoices.PENDING
     )
 
-    products = models.ManyToManyField(Product, through='OrderItem')
+    products = models.ManyToManyField(Product, through='OrderItem', realated_name='orders')
 
     def __str__(self):
         return f"Order {self.order_id} by {self.user.username}"
@@ -50,6 +50,12 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
+
+    @quantity
+
+    def item_subtotal(self):
+        return self.quantity * self.product.price   
+
 
     def __str__(self):
         return f"{self.quantity} of {self.product.name} in Order {self.order.order_id}"
