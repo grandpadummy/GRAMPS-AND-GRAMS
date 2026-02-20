@@ -1,61 +1,91 @@
-import uuid
-
-from django.contrib.auth.models import AbstractUser
 from django.db import models
+import datetime
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
 
-# Create your models here.
-# #1 Create models
 
-class User(AbstractUser):
-    pass
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    date_modified = models.DateTimeField(auto_now=True)
+    address1 = models.CharField(max_length=200, blank=True)
+    address2 = models.CharField(max_length=200, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    country = models.CharField(max_length=100, blank=True)
+    zip_code = models.CharField(max_length=20, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    old_cart = models.CharField(max_length=200, null=True)
+    
+    
+
+    def __str__(self):
+        return self.user.username
+    
+def create_profile(sender, instance, created, **kwargs):
+    if created:
+        user_profile = Profile(user=instance)
+        user_profile.save()
+
+post_save.connect(create_profile, sender=User)
+
+
+
+class Category(models.Model):
+    name = models.CharField(max_length=50)
+
+    class Meta:
+        verbose_name_plural = 'Categories'
+    
+
+    def __str__(self):
+        return self.name    
+
+class Customer(models.Model):
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField(max_length=100)
+    phone_number = models.CharField(max_length=15)
+    password = models.CharField(max_length=50)
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
 
 class Product(models.Model):
     name = models.CharField(max_length=100)
-    description = models.TextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    stock = models.PositiveIntegerField()
-    image = models.ImageField(upload_to='products/', blank=True, null=True)
+    price = models.DecimalField(default=0, decimal_places=2, max_digits=6)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, default=1)
+    description = models.CharField(max_length=1000, default='', blank=True, null=True)
+    image = models.ImageField(upload_to='uploads/product/') 
 
-    @property
-    def in_stock(self):
-        return self.stock > 0
-
+    on_sale = models.BooleanField(default=False)
+    sale_price = models.DecimalField(default=0, decimal_places=2, max_digits=6)
 
     def __str__(self):
         return self.name
 
-
 class Order(models.Model):
-    class StatusChoices(models.TextChoices):
-        PENDING = 'pending'
-        CONFIRMED = 'confirmed'
-        CANCELLED = 'cancelled'
-
-    orders_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(
-        max_length=10,
-        choices=StatusChoices.choices,
-        default=StatusChoices.PENDING
-    )
-
-    products = models.ManyToManyField(Product, through='OrderItem', realated_name='orders')
-
-    def __str__(self):
-        return f"Order {self.order_id} by {self.user.username}"
-
-
-class OrderItem(models.Model):
-    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField()
 
-    @quantity
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
 
-    def item_subtotal(self):
-        return self.quantity * self.product.price   
+    quantity = models.IntegerField(default='', blank=True)
 
+    address = models.CharField(max_length=200, default='', blank=True)
+
+    phone = models.CharField(max_length=15, default='', blank=True)
+
+    date = models.DateField(default=datetime.datetime.today)
+
+    status = models.BooleanField(default=False)
+
+    
 
     def __str__(self):
-        return f"{self.quantity} of {self.product.name} in Order {self.order.order_id}"
+        return self.product
+    
+    
+    
+
+
+
+
+

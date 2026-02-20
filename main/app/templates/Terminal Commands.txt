@@ -1,0 +1,25 @@
+from django.contrib.sessions.models import Session
+
+k = Session.objects.get(pk='yaiag94fbtu30j4hqdy1p99xvefbmuf0')
+
+k = Session.objects.get(pk='')
+
+k = Session.objects.get(pk='')
+
+k.get_decoded()
+
+
+Ex. of a return:
+
+{'session_key': {'4': {'price': '19.99'}, '2': {'price': '899.99'}}}
+
+
+exit()
+
+
+
+cd main
+
+python manage.py runserver
+
+source venv/Scripts/activate
